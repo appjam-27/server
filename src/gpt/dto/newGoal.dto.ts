@@ -1,6 +1,7 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { IsArray, IsString } from 'class-validator';
-import { ChapterModel, StoryModel } from '../gpt.model';
+import { ChapterModel } from '../gpt.model';
+import { StoriesDTO } from './stories.dto';
 
 export class NewGoalDTO {
   @ApiProperty({
@@ -24,9 +25,9 @@ export class NewGoalResponseDTO {
   icon: string;
 
   @ApiProperty({
-    type: StoryModel,
+    type: StoriesDTO,
   })
-  story: StoryModel;
+  story: StoriesDTO;
 
   @ApiProperty({
     type: [ChapterModel],
