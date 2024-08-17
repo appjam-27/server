@@ -99,6 +99,7 @@ export class GptService {
         },
       ],
       function_call: 'auto',
+      temperature: 1.2,
       messages: [
         {
           role: 'system',
