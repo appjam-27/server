@@ -2,7 +2,6 @@ import { Body, Controller, Post } from '@nestjs/common';
 import { ApiBody, ApiOkResponse } from '@nestjs/swagger';
 import { NewGoalDTO, NewGoalResponseDTO } from './dto/newGoal.dto';
 import { GptService } from './gpt.service';
-import { UpdateStoryDTO, UpdateStoryResponseDTO } from './dto/updateStory.dto';
 import {
   ChapterContentDTO,
   ChapterContentResponseDTO,
@@ -40,18 +39,6 @@ export class GptController {
         title: firstStory.title,
         content: stories,
       },
-    };
-  }
-
-  @Post('story/update')
-  @ApiBody({ type: UpdateStoryDTO })
-  @ApiOkResponse({
-    description: 'Update a story',
-    type: UpdateStoryResponseDTO,
-  })
-  async updateStory(@Body() dto: UpdateStoryDTO) {
-    return {
-      content: await this.gptService.makeStory(dto.goal, dto.chapters),
     };
   }
 
