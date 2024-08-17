@@ -19,13 +19,16 @@ export class ChapterComplateDTO {
 
 export class ChapterComplateResponseDTO {
   @ApiProperty({
-    example: '결과',
+    description: '결과',
+    example:
+      '나는 피그마 학습에 도전했다. 레이아웃과 그리드를 균형 있게 배치하는 법을 배우며, 조화로운 디자인을 완성해냈다. 다양한 화면 크기에 맞춰 반응형 디자인을 구현하는 과정에서 새로운 가능성을 발견했다. 이제는 레이아웃과 그리드 시스템을 마스터한 나는 창의적인 디자인을 만들어낼 준비가 되어있는 것 같다.',
   })
   @IsString()
   content: string;
 
   @ApiProperty({
-    example: '이미지 URL',
+    description: '이미지 URL',
+    example: 'https://oaidalleapiprodscus.blob.core.windows.net',
   })
   @IsString()
   url: string;
