@@ -212,4 +212,34 @@ export class GptService {
 
     return completion.choices[0].message.content;
   }
+
+  async makeChapterComplatePage(goal: string, chapterContent: string) {
+    const completion = await this.#openai.chat.completions.create({
+      model: 'gpt-3.5-turbo',
+      messages: [
+        {
+          role: 'system',
+          content: `너는 유저의 목표를 이루기 위해 도와주는 어시스턴트야. 너의 출력은 모두 마크다운 형식이여야 해.`,
+        },
+        {
+          role: 'user',
+          content: `다음 목표를 이루기 위해 챕터를 완료하고 공부한 소감을 정리해야 해.
+          '${chapterContent}'에 대한 내용을 60자 이내의 문단 없는 1인칭 줄글 소설 스토리텔링로 작성해줘.
+          ${goal}`,
+        },
+      ],
+    });
+
+    const content = completion.choices[0].message.content;
+
+    const image = await this.#openai.images.generate({
+      model: 'dall-e-3',
+      prompt: content,
+    });
+
+    return {
+      url: image.data[0].url,
+      content,
+    };
+  }
 }
