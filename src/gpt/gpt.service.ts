@@ -6,7 +6,12 @@ import OpenAI from 'openai';
 export class GptService {
   constructor(private readonly configService: ConfigService) {
     // test
-    this.makeChapter('피그마 배우기').then((chapters) => console.log(chapters));
+    this.makeChapter('피그마 배우기').then((chapters) => {
+      console.log(chapters);
+      this.makeStory('피그마 배우기', chapters).then((story) => {
+        console.log(story);
+      });
+    });
   }
 
   #openai = new OpenAI({
@@ -85,5 +90,50 @@ export class GptService {
     }));
 
     return chapters;
+  }
+
+  async makeFirstStory(goal: string) {
+    const completion = await this.#openai.chat.completions.create({
+      model: 'gpt-3.5-turbo',
+      max_tokens: 300,
+      messages: [
+        {
+          role: 'system',
+          content: `너는 유저의 목표를 이루기 위해 도와주는 어시스턴트야.`,
+        },
+        {
+          role: 'user',
+          content: `다음 목표를 이루기 위해 챕터을 해결하며 처음 지식을 쌓는 심정에 대한 1인칭 소설 스토리텔링을 80자 이내로 써줘. ${goal}`,
+        },
+      ],
+    });
+
+    return completion.choices[0].message.content;
+  }
+
+  async makeStory(
+    goal: string,
+    chapters: { title: string; desc: string; duration: string }[],
+  ) {
+    const completion = await this.#openai.chat.completions.create({
+      model: 'gpt-3.5-turbo',
+      messages: [
+        {
+          role: 'system',
+          content: `너는 유저의 목표를 이루기 위해 도와주는 어시스턴트야.`,
+        },
+        {
+          role: 'user',
+          content: `다음 목표를 이루기 위해 아래의 ${chapters.length}개의 챕터를 해결하여 목표를 다가가는 60자 이내의 문단 없는 1인칭 줄글 소설 스토리텔링을 작성해줘.
+          ${goal}.
+          ${chapters.map(
+            (chapter, i) =>
+              `${i + 1}. ${chapter.title}, ${chapter.desc}, ${chapter.duration}`,
+          )}`,
+        },
+      ],
+    });
+
+    return completion.choices[0].message.content;
   }
 }
