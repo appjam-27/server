@@ -48,7 +48,9 @@ export class GptController {
     description: 'Get chapter content',
     type: ChapterContentResponseDTO,
   })
-  async getChapterContent(@Body() dto: ChapterContentDTO) {
+  async getChapterContent(
+    @Body() dto: ChapterContentDTO,
+  ): Promise<ChapterContentResponseDTO> {
     return {
       content: await this.gptService.makeChapterContent(dto.goal, dto.chapter),
     };
