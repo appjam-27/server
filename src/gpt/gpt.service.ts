@@ -1,17 +1,17 @@
 import { Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import OpenAI from 'openai';
+import { ChapterModel } from './gpt.model';
 
 @Injectable()
 export class GptService {
   constructor(private readonly configService: ConfigService) {
     // test
-    this.makeChapter('피그마 배우기').then((chapters) => {
-      console.log(chapters);
-      this.makeStory('피그마 배우기', chapters).then((story) => {
-        console.log(story);
-      });
-    });
+    this.makeChapterContent('피그마 배우기', {
+      title: '레이아웃과 그리드',
+      desc: '효율적인 레이아웃과 그리드 시스템을 활용하는 방법을 익혀봅시다.',
+      duration: '1시간',
+    }).then(console.log);
   }
 
   #openai = new OpenAI({
@@ -83,7 +83,9 @@ export class GptService {
       completion.choices[0].message.function_call.arguments,
     );
 
-    const chapters = Array.from({ length: this.#chapterCount }).map((_, i) => ({
+    const chapters: ChapterModel[] = Array.from({
+      length: this.#chapterCount,
+    }).map((_, i) => ({
       title: res[`chapterTitle${i + 1}`],
       desc: res[`chapterDesc${i + 1}`],
       duration: res[`chapterDuration${i + 1}`],
@@ -111,10 +113,7 @@ export class GptService {
     return completion.choices[0].message.content;
   }
 
-  async makeStory(
-    goal: string,
-    chapters: { title: string; desc: string; duration: string }[],
-  ) {
+  async makeStory(goal: string, chapters: ChapterModel[]) {
     const completion = await this.#openai.chat.completions.create({
       model: 'gpt-3.5-turbo',
       messages: [
@@ -127,9 +126,28 @@ export class GptService {
           content: `다음 목표를 이루기 위해 아래의 ${chapters.length}개의 챕터를 해결하여 목표를 다가가는 60자 이내의 문단 없는 1인칭 줄글 소설 스토리텔링을 작성해줘.
           ${goal}.
           ${chapters.map(
-            (chapter, i) =>
-              `${i + 1}. ${chapter.title}, ${chapter.desc}, ${chapter.duration}`,
+            (chapter, i) => `${i + 1}. ${chapter.title}, ${chapter.desc}`,
           )}`,
+        },
+      ],
+    });
+
+    return completion.choices[0].message.content;
+  }
+
+  async makeChapterContent(goal: string, { title, desc }: ChapterModel) {
+    const completion = await this.#openai.chat.completions.create({
+      model: 'gpt-3.5-turbo',
+      messages: [
+        {
+          role: 'system',
+          content: `너는 유저의 목표를 이루기 위해 도와주는 어시스턴트야.`,
+        },
+        {
+          role: 'user',
+          content: `다음 목표를 이루기 위해 챕터를 진행하여 공부해야 해.
+          ${title}에 대한 ${desc} 내용을 마크다운으로 작성해줘. 제목은 따로 작성할 거니, 빼고 출력해줘.
+          ${goal}`,
         },
       ],
     });
