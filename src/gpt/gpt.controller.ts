@@ -3,7 +3,10 @@ import { ApiBody, ApiOkResponse } from '@nestjs/swagger';
 import { NewGoalDTO, NewGoalResponseDTO } from './dto/newGoal.dto';
 import { GptService } from './gpt.service';
 import { UpdateStoryDTO, UpdateStoryResponseDTO } from './dto/updateStory.dto';
-import { ChapterContentDTO } from './dto/chapterContent.dto';
+import {
+  ChapterContentDTO,
+  ChapterContentResponseDTO,
+} from './dto/chapterContent.dto';
 
 @Controller('gpt')
 export class GptController {
@@ -37,7 +40,7 @@ export class GptController {
   @ApiBody({ type: ChapterContentDTO })
   @ApiOkResponse({
     description: 'Get chapter content',
-    type: ChapterContentDTO,
+    type: ChapterContentResponseDTO,
   })
   async getChapterContent(@Body() dto: ChapterContentDTO) {
     return {
