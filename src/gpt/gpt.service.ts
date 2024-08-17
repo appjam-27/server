@@ -1,23 +1,56 @@
 import { Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import OpenAI from 'openai';
-import { ChapterModel } from './gpt.model';
+import { ChapterModel, StoryModel } from './gpt.model';
 
 @Injectable()
 export class GptService {
-  constructor(private readonly configService: ConfigService) {
-    // test
-    this.makeChapterContent('피그마 배우기', {
-      title: '레이아웃과 그리드',
-      desc: '효율적인 레이아웃과 그리드 시스템을 활용하는 방법을 익혀봅시다.',
-      duration: '1시간',
-    }).then(console.log);
-  }
+  constructor(private readonly configService: ConfigService) {}
 
   #openai = new OpenAI({
     apiKey: this.configService.get<string>('OPENAI_API_KEY'),
   });
   #chapterCount = 4;
+  #iconList = ['design', 'activities', 'social', 'business', 'movies', 'dev'];
+
+  async selectIcon(goal: string) {
+    const completion = await this.#openai.chat.completions.create({
+      model: 'gpt-3.5-turbo',
+      functions: [
+        {
+          name: 'selectIcon',
+          description: '목표와 관련된 아이콘을 선택합니다.',
+          parameters: {
+            type: 'object',
+            properties: {
+              icon: {
+                type: 'string',
+                description: `목표와 관련된 아이콘 (${this.#iconList.join(', ')}) 중 하나를 선택해주세요.`,
+              },
+            },
+            required: ['icon'],
+          },
+        },
+      ],
+      function_call: 'auto',
+      messages: [
+        {
+          role: 'system',
+          content: `너는 유저의 목표에 대한 아이콘을 선택하는 어시스턴트야.`,
+        },
+        {
+          role: 'user',
+          content: `다음 목표와 관련된 아이콘을 선택해줘. ${goal}`,
+        },
+      ],
+    });
+
+    const res: { icon: string } = JSON.parse(
+      completion.choices[0].message.function_call.arguments,
+    );
+
+    return res.icon;
+  }
 
   makeFnCallParameters() {
     const parameters = {
@@ -98,6 +131,26 @@ export class GptService {
     const completion = await this.#openai.chat.completions.create({
       model: 'gpt-3.5-turbo',
       max_tokens: 300,
+      functions: [
+        {
+          name: 'makeStory',
+          description: '스토리텔링 소설을 작성합니다.',
+          parameters: {
+            type: 'object',
+            properties: {
+              title: {
+                type: 'string',
+                description: '소설 제목',
+              },
+              content: {
+                type: 'string',
+                description: '소설 내용',
+              },
+            },
+            required: ['title', 'content'],
+          },
+        },
+      ],
       messages: [
         {
           role: 'system',
@@ -110,7 +163,11 @@ export class GptService {
       ],
     });
 
-    return completion.choices[0].message.content;
+    const res: StoryModel = JSON.parse(
+      completion.choices[0].message.function_call.arguments,
+    );
+
+    return res;
   }
 
   async makeStory(goal: string, chapters: ChapterModel[]) {
@@ -141,12 +198,13 @@ export class GptService {
       messages: [
         {
           role: 'system',
-          content: `너는 유저의 목표를 이루기 위해 도와주는 어시스턴트야.`,
+          content: `너는 유저의 목표를 이루기 위해 도와주는 어시스턴트야. 너의 출력은 모두 마크다운 형식이여야 해.`,
         },
         {
           role: 'user',
           content: `다음 목표를 이루기 위해 챕터를 진행하여 공부해야 해.
-          ${title}에 대한 ${desc} 내용을 마크다운으로 작성해줘. 제목은 따로 작성할 거니, 빼고 출력해줘.
+          '${title} - ${desc}'에 대한 내용을 마크다운으로 작성해줘.
+          양식은 소제목 3개 이상으로 구성되었으면 좋겠어.
           ${goal}`,
         },
       ],
