@@ -1,11 +1,12 @@
 import * as admin from 'firebase-admin';
-import { TokenMessage } from 'firebase-admin/lib/messaging/messaging-api';
+import { TopicMessage } from 'firebase-admin/lib/messaging/messaging-api';
 import { DateTime } from 'luxon';
 import * as serverAccount from 'secret/firebase.json';
 
 import { Injectable } from '@nestjs/common';
 
 import { FCMTokenMessageModel } from './models/token-data.model';
+import { Cron, CronExpression } from '@nestjs/schedule';
 
 @Injectable()
 export class FirebaseService {
@@ -13,26 +14,29 @@ export class FirebaseService {
     admin.initializeApp({
       credential: admin.credential.cert(serverAccount as admin.ServiceAccount),
     });
+  }
 
+  @Cron(CronExpression.EVERY_DAY_AT_8AM)
+  async sendEveryDay() {
     this.sendNotificationByToken({
-      token: 'token',
+      topic: 'all',
       title: '안녕, 캔두 왔어요.',
       body: '오늘따라 춥네요,,, 아무도 없어서 그런가요,,,?',
     });
   }
 
-  async tokenMessageGenerator({
-    token,
+  async topicMessageGenerator({
+    topic,
     title,
     body,
     data,
-  }: FCMTokenMessageModel): Promise<TokenMessage> {
-    const message: TokenMessage = {
+  }: FCMTokenMessageModel): Promise<TopicMessage> {
+    const message: TopicMessage = {
       notification: {
         title,
         body,
       },
-      token,
+      topic,
       data: data as unknown as { [key: string]: string },
       android: {
         priority: 'high',
@@ -66,11 +70,11 @@ export class FirebaseService {
     try {
       await admin
         .messaging()
-        .send(await this.tokenMessageGenerator(notificationData))
+        .send(await this.topicMessageGenerator(notificationData))
         .then((response) => {
           console.log(
             DateTime.now().toISO({ includeOffset: true }),
-            notificationData.token,
+            notificationData.topic,
             notificationData.body,
             response,
           );

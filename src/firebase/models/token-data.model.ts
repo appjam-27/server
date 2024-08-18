@@ -1,5 +1,5 @@
 export interface FCMTokenMessageModel {
-  token: string;
+  topic: string;
   title: string;
   body: string;
   data?: MessageDataModel;
