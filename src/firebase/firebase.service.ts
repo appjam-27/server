@@ -14,11 +14,14 @@ export class FirebaseService {
     admin.initializeApp({
       credential: admin.credential.cert(serverAccount as admin.ServiceAccount),
     });
+
+    // test
+    this.sendEveryDay();
   }
 
   @Cron(CronExpression.EVERY_DAY_AT_8AM)
   async sendEveryDay() {
-    this.sendNotificationByToken({
+    this.sendNotificationByTopic({
       topic: 'all',
       title: '안녕, 캔두 왔어요.',
       body: '오늘따라 춥네요,,, 아무도 없어서 그런가요,,,?',
@@ -64,7 +67,7 @@ export class FirebaseService {
     return message;
   }
 
-  async sendNotificationByToken(
+  async sendNotificationByTopic(
     notificationData: FCMTokenMessageModel,
   ): Promise<boolean> {
     try {
